@@ -12,7 +12,7 @@ def get_motor_left_matrix(shape: Tuple[int, int]) -> np.ndarray:
     y = np.linspace([2], 0, num=shape[0]//4)
 
     res[3*shape[0]//4:, shape[1]//8:3*shape[1]//8] = 1.0 / (2 * np.pi) * np.exp(-y**2 / 2) * np.exp(-x**2 / 2)
-
+    #res[3*shape[0]//4:, shape[1]//8:3*shape[1]//8] = 1.0
     return res
 
 
@@ -24,4 +24,6 @@ def get_motor_right_matrix(shape: Tuple[int, int]) -> np.ndarray:
     y = np.linspace([2], 0, num=shape[0]//2)
     res[shape[0]//2:, shape[1]//2:3*shape[1]//4] = 1.0 / (2 * np.pi) * np.exp(-y**2 / 2) * np.exp(-x**2 / 2)
 
+    #res[shape[0]//2:, shape[1]//2:3*shape[1]//4] = 1.0
+    
     return res
