@@ -23,7 +23,7 @@ class SkipException(Exception):
 # Need to change this dataset directory if not running inside docker container... TODO fix
 DATASET_DIR="/jupyter_ws/solution/duckietown_dataset"
 IMAGE_SIZE=416
-SPLIT_PERCENTAGE=0.8
+SPLIT_PERCENTAGE=0.6
 
 
 npz_index = 0

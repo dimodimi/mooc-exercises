@@ -4,4 +4,8 @@ solution/devel/
 solution/logs/
 .idea
 /.idea/
+# Ignore dataset
 solution/duckietown_dataset
+# Ignore anything that is not a model pt file
+solution/nn_models
+!solution/nn_models/*.pt

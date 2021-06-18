@@ -21,7 +21,7 @@ def MODEL_NAME():
 def NUMBER_FRAMES_SKIPPED():
     # todo change this number to drop more frames
     # (must be a positive integer)
-    return 5
+    return 3
 
 
 # In[ ]:
@@ -43,7 +43,7 @@ def filter_by_scores(scor):
     # Right now, this returns True for every object's confidence
     # Change this to filter the scores, or not at all
     # (returning True for all of them might be the right thing to do!)
-    return scor >= 0.6
+    return scor >= 0.5
 
 
 # In[ ]:
@@ -53,7 +53,7 @@ def filter_by_scores(scor):
 # So it is of the shape (leftmost x pixel, topmost y pixel, rightmost x pixel, bottommost y pixel)
 def filter_by_bboxes(bbox):
     # Like in the other cases, return False if the bbox should not be considered.
-    area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-    
-    return area > 20*20
+    #area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+    #return area > 20*20
+    return True
 
