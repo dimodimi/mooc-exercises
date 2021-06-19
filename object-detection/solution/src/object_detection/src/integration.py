@@ -21,7 +21,7 @@ def MODEL_NAME():
 def NUMBER_FRAMES_SKIPPED():
     # todo change this number to drop more frames
     # (must be a positive integer)
-    return 3
+    return 1
 
 
 # In[ ]:
@@ -43,7 +43,7 @@ def filter_by_scores(scor):
     # Right now, this returns True for every object's confidence
     # Change this to filter the scores, or not at all
     # (returning True for all of them might be the right thing to do!)
-    return scor >= 0.5
+    return scor >= 0.0
 
 
 # In[ ]:
