@@ -21,7 +21,7 @@ def MODEL_NAME():
 def NUMBER_FRAMES_SKIPPED():
     # todo change this number to drop more frames
     # (must be a positive integer)
-    return 2
+    return 4
 
 
 # In[ ]:
