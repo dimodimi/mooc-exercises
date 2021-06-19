@@ -23,7 +23,7 @@ class SkipException(Exception):
 # Need to change this dataset directory if not running inside docker container... TODO fix
 DATASET_DIR="/jupyter_ws/solution/duckietown_dataset"
 IMAGE_SIZE=416
-SPLIT_PERCENTAGE=0.6
+SPLIT_PERCENTAGE=0.8
 
 
 npz_index = 0
@@ -42,7 +42,7 @@ def save_npz(img, boxes, classes):
 
 # some setup
 seed(123)
-MAX_STEPS = 10
+MAX_STEPS = 1000
 nb_of_steps = 0
 
 # we interate over several maps to get more diverse data
@@ -56,7 +56,8 @@ env_id = 0
 env = None
 while True:
     if env is not None:
-        env.window.close()
+        #Not needed - we do not render the images on a window (line 86)
+        #env.window.close()
         env.close()
 
     if env_id >= len(possible_maps):
@@ -104,7 +105,7 @@ while True:
     if nb_of_steps >= MAX_STEPS:
         break
 
-
+all_image_names = list(range(npz_index))
 train_test_split(all_image_names, SPLIT_PERCENTAGE, DATASET_DIR)
 
 #run(f"rm -rf {DATASET_DIR}/images {DATASET_DIR}/labels")
