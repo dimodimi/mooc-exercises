@@ -38,7 +38,7 @@ def train_test_split(filenames, split_percentage, dataset_dir):
     nb_things = len(train_txt)
     sp = int(split_percentage * nb_things)
     train_txt, val_txt = train_txt[:sp], train_txt[sp:]
-
+    
     def mv(img_name, to_train):
         dest = "train" if to_train else "val"
         run(f"mv {dataset_dir}/images/{img_name}.jpg {dataset_dir}/{dest}/images/{img_name}.jpg")
@@ -107,3 +107,4 @@ def display_img_seg_mask(real_img, seg_img):
 
     cv2.imshow("image", all)
     cv2.waitKey(0)
+
