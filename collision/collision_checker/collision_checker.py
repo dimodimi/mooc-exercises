@@ -2,6 +2,8 @@ import itertools
 import random
 from typing import List
 
+import numpy as np
+
 from aido_schemas import Context, FriendlyPose
 from dt_protocols import (
     Circle,
@@ -62,14 +64,52 @@ def check_collision_shape(a: PlacedPrimitive, b: PlacedPrimitive) -> bool:
 
     if isinstance(a, Circle) and isinstance(b, Circle):
         # If the distance between the two centers is less than the sum of the radii we have collision
-        return (a.pose.x - b.pose.x)**2 + (a.pose.y - b.pose.y)**2 < (a.primitive.radius + b.primitive.radius)**2
+        return collision_check_circle_circle(a, b)
 
-    if isinstance(a, Circle) and isinstance(b, Rectangle):
-        ...
-    if isinstance(a, Rectangle) and isinstance(b, Circle):
+    elif isinstance(a, Circle) and isinstance(b, Rectangle):
+        
 
-    if isinstance(a, Rectangle) and isinstance(b, Rectangle):
+    elif isinstance(a, Rectangle) and isinstance(b, Circle):
 
+    elif isinstance(a, Rectangle) and isinstance(b, Rectangle):
+        return collision_check_rect_rect(a, b)
+    else:
+        raise 
     # for now let's return a random guess
 
     return ...
+
+def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> bool:
+    return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 < (c1.primitive.radius + c2.primitive.radius)**2
+
+def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
+    w1, h1 = r1.primitive.xmax - r1.primitive.xmin, r1.primitive.ymax - r1.primitive.ymin
+    w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
+
+    theta = r2.pose.theta_deg - r1.pose.theta_deg
+    
+    # Get the second rectangle's corners in the first one's frame of reference, centered at (0, 0)
+    corners = np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \ 
+                np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.os(theta)]]) @ np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]])
+
+    corners = np.abs(corners)
+    # Check if any of the corners is within the first rectangle
+    for i in range(4):
+        if corners[0, i] < w1/2 and corners[1, i] < h1/2:
+            return True
+
+    return False
+
+def rect_circle_heuristic(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
+    # Create two circles related to the rectangle
+    circumscribed = PlacedPrimitive( 
+                        FriendlyPose(rect.x, rect.y, 0.0),
+                        ## FIX radius - rectangle is rotated in general cant use just mix-max values
+                        Circle(np.sqrt((rect.primitive.xmax - rect.primitive.xmin)**2 + \
+                                       (rect.primitive.ymax - rect.primitive.ymin)**2) / 2.0)
+                    )
+
+    if not collision_check_circle_circle(circ, circumscribed):
+        return False
+
+
