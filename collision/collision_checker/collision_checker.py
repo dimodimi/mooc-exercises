@@ -82,6 +82,7 @@ def check_collision_shape(a: PlacedPrimitive, b: PlacedPrimitive) -> bool:
 def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> bool:
     return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 < (c1.primitive.radius + c2.primitive.radius)**2
 
+## TODO: Doesn't cover all cases
 def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     w1, h1 = r1.primitive.xmax - r1.primitive.xmin, r1.primitive.ymax - r1.primitive.ymin
     w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
@@ -99,6 +100,17 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
             return True
 
     return False
+
+def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
+
+    # The rectangle acts as our reference frame, so transform the circle
+    theta = rect.pose.theta_deg
+    new_center = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.os(theta)]]) @ \
+                    np.array([[circ.pose.x - rect.pose.x], [circ.pose.y - rect.pose.y]])
+
+    return (new_center[0] - np.clip(new_center[0], a_min=rect.primitive.xmin, a_max=rect.primitive.xmax))**2 + \
+            (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 < trans_circ.primitive.radius**2
+
 
 def rect_circle_heuristic(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
     # Create two circles related to the rectangle
