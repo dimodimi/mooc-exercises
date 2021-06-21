@@ -63,43 +63,42 @@ def check_collision_shape(a: PlacedPrimitive, b: PlacedPrimitive) -> bool:
     # This is just some code to get you started, but you don't have to follow it exactly
 
     if isinstance(a, Circle) and isinstance(b, Circle):
-        # If the distance between the two centers is less than the sum of the radii we have collision
         return collision_check_circle_circle(a, b)
 
     elif isinstance(a, Circle) and isinstance(b, Rectangle):
-        
+        return collision_check_rect_circle(b, a)
 
     elif isinstance(a, Rectangle) and isinstance(b, Circle):
+        return collision_check_rect_circle(a, b)
 
     elif isinstance(a, Rectangle) and isinstance(b, Rectangle):
         return collision_check_rect_rect(a, b)
     else:
-        raise 
-    # for now let's return a random guess
-
-    return ...
+        raise TypeError("Arguments must be either a Circle or a Rectangle primitive") 
 
 def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> bool:
     return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 < (c1.primitive.radius + c2.primitive.radius)**2
 
-## TODO: Doesn't cover all cases
 def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
-    w1, h1 = r1.primitive.xmax - r1.primitive.xmin, r1.primitive.ymax - r1.primitive.ymin
     w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
 
     theta = r2.pose.theta_deg - r1.pose.theta_deg
     
     # Get the second rectangle's corners in the first one's frame of reference, centered at (0, 0)
     corners = np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \ 
-                np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]])
+                np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ \
+                    np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]])
 
-    corners = np.abs(corners)
-    # Check if any of the corners is within the first rectangle
-    for i in range(4):
-        if corners[0, i] < w1/2 and corners[1, i] < h1/2:
-            return True
+    # Separating line theorem for convex polygons
 
-    return False
+    # For the rotated rectangle get the xmin, xmax, ymin, ymax of the enclosing rectangle
+    x2_min, x2_max = np.amin(corners[0]), np.amax(corners[0])
+    y2_min, y2_max = np.amin(corners[1]), np.amax(corners[1])
+
+    x_overlap = (r1.primitive.xmin < x2_max) and (r1.primitive.xmax > x2_min)
+    y_overlap = (r1.primitive.ymin < y2_max) and (r1.primitive.ymax > y2_min)
+
+    return x_overlap and y_overlap
 
 def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
 
@@ -110,18 +109,4 @@ def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) ->
 
     return (new_center[0] - np.clip(new_center[0], a_min=rect.primitive.xmin, a_max=rect.primitive.xmax))**2 + \
             (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 < circ.primitive.radius**2
-
-
-def rect_circle_heuristic(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
-    # Create two circles related to the rectangle
-    circumscribed = PlacedPrimitive( 
-                        FriendlyPose(rect.x, rect.y, 0.0),
-                        ## FIX radius - rectangle is rotated in general cant use just mix-max values
-                        Circle(np.sqrt((rect.primitive.xmax - rect.primitive.xmin)**2 + \
-                                       (rect.primitive.ymax - rect.primitive.ymin)**2) / 2.0)
-                    )
-
-    if not collision_check_circle_circle(circ, circumscribed):
-        return False
-
 
