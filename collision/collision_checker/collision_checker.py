@@ -91,7 +91,7 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     
     # Get the second rectangle's corners in the first one's frame of reference, centered at (0, 0)
     corners = np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \ 
-                np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.os(theta)]]) @ np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]])
+                np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]])
 
     corners = np.abs(corners)
     # Check if any of the corners is within the first rectangle
@@ -105,11 +105,11 @@ def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) ->
 
     # The rectangle acts as our reference frame, so transform the circle
     theta = rect.pose.theta_deg
-    new_center = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.os(theta)]]) @ \
+    new_center = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ \
                     np.array([[circ.pose.x - rect.pose.x], [circ.pose.y - rect.pose.y]])
 
     return (new_center[0] - np.clip(new_center[0], a_min=rect.primitive.xmin, a_max=rect.primitive.xmax))**2 + \
-            (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 < trans_circ.primitive.radius**2
+            (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 < circ.primitive.radius**2
 
 
 def rect_circle_heuristic(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
