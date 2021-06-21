@@ -21,7 +21,7 @@ def MODEL_NAME():
 def NUMBER_FRAMES_SKIPPED():
     # todo change this number to drop more frames
     # (must be a positive integer)
-    return 4
+    return 2
 
 
 # In[ ]:
@@ -32,7 +32,7 @@ def filter_by_classes(clas):
     # Right now, this returns True for every object's class
     # Change this to only return True for duckies!
     # In other words, returning False means that this prediction is ignored.
-    return clas == 0
+    return True
 
 
 # In[ ]:
@@ -43,7 +43,7 @@ def filter_by_scores(scor):
     # Right now, this returns True for every object's confidence
     # Change this to filter the scores, or not at all
     # (returning True for all of them might be the right thing to do!)
-    return scor >= 0.5
+    return True
 
 
 # In[ ]:
@@ -54,5 +54,6 @@ def filter_by_scores(scor):
 def filter_by_bboxes(bbox):
     # Like in the other cases, return False if the bbox should not be considered.
     area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-    return area > 20*20
+    #return area > 20*20
+    return True
 

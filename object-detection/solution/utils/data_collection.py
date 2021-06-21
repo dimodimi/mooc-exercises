@@ -91,10 +91,10 @@ while True:
             print(e)
             continue
 
-        for box in boxes:
-            pt1 = (box[0], box[1])
-            pt2 = (box[2], box[3])
-            cv2.rectangle(obs, pt1, pt2, (255,0,0), 2)
+        #for box in boxes:
+        #    pt1 = (box[0], box[1])
+        #    pt2 = (box[2], box[3])
+        #    cv2.rectangle(obs, pt1, pt2, (255,0,0), 2)
 
         save_npz(obs, boxes, classes)
         nb_of_steps += 1
