@@ -39,9 +39,16 @@ def check_collision(
     Wcoll: List[PlacedPrimitive], robot_body: List[PlacedPrimitive], robot_pose: FriendlyPose
 ) -> bool:
     # This is just some code to get you started, but you don't have to follow it exactly
+    
+    theta_rot = robot_pose.pose.theta_deg
+    ct, st = np.cos(theta_rot), np.sin(theta_rot)
 
     # start by rototranslating the robot parts by the robot pose
-    rototranslated_robot: List[PlacedPrimitive] = []  #
+    rototranslated_robot: List[PlacedPrimitive] = [PlacedPrimitive(
+                    FriendlyPose(ct * p.pose.x - st * p.pose.y + robot_pose.pose.x, 
+                                 st * p.pose.x + ct * p.pose.y + robot_pose.pose.y,
+                                 p.pose.theta_deg + theta_rot),
+                    type(p.primitive)(*p.primitive.__dict__.values())) for p in robot_body]  #
 
     collided = check_collision_list(rototranslated_robot, Wcoll)
 
