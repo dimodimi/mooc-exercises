@@ -32,7 +32,7 @@ def filter_by_classes(clas):
     # Right now, this returns True for every object's class
     # Change this to only return True for duckies!
     # In other words, returning False means that this prediction is ignored.
-    return True
+    return int(clas) == 0
 
 
 # In[ ]:
@@ -54,6 +54,5 @@ def filter_by_scores(scor):
 def filter_by_bboxes(bbox):
     # Like in the other cases, return False if the bbox should not be considered.
     area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-    #return area > 20*20
-    return True
+    return area > 100 * 100
 
