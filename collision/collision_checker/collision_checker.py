@@ -40,7 +40,7 @@ def check_collision(
 ) -> bool:
     # This is just some code to get you started, but you don't have to follow it exactly
     
-    theta_rot = robot_pose.pose.theta_deg
+    theta_rot = np.deg2rad(robot_pose.pose.theta_deg)
     ct, st = np.cos(theta_rot), np.sin(theta_rot)
 
     # start by rototranslating the robot parts by the robot pose
@@ -89,7 +89,7 @@ def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> b
 def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
 
-    theta = r2.pose.theta_deg - r1.pose.theta_deg
+    theta = np.deg2rad(r2.pose.theta_deg - r1.pose.theta_deg)
     
     # Get the second rectangle's corners in the first one's frame of reference, centered at (0, 0)
     corners = np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \ 
@@ -110,7 +110,7 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
 def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
 
     # The rectangle acts as our reference frame, so transform the circle
-    theta = rect.pose.theta_deg
+    theta = np.deg2rad(rect.pose.theta_deg)
     new_center = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ \
                     np.array([[circ.pose.x - rect.pose.x], [circ.pose.y - rect.pose.y]])
 
