@@ -40,14 +40,14 @@ def check_collision(
 ) -> bool:
     # This is just some code to get you started, but you don't have to follow it exactly
     
-    theta_rot = np.deg2rad(robot_pose.pose.theta_deg)
+    theta_rot = np.deg2rad(robot_pose.theta_deg)
     ct, st = np.cos(theta_rot), np.sin(theta_rot)
 
     # start by rototranslating the robot parts by the robot pose
     rototranslated_robot: List[PlacedPrimitive] = [PlacedPrimitive(
-                    FriendlyPose(ct * p.pose.x - st * p.pose.y + robot_pose.pose.x, 
-                                 st * p.pose.x + ct * p.pose.y + robot_pose.pose.y,
-                                 p.pose.theta_deg + theta_rot),
+                    FriendlyPose(ct * p.pose.x - st * p.pose.y + robot_pose.x, 
+                                 st * p.pose.x + ct * p.pose.y + robot_pose.y,
+                                 p.pose.theta_deg + robot_pose.theta_deg),
                     type(p.primitive)(*p.primitive.__dict__.values())) for p in robot_body]  #
 
     collided = check_collision_list(rototranslated_robot, Wcoll)
@@ -69,32 +69,35 @@ def check_collision_list(A: List[PlacedPrimitive], B: List[PlacedPrimitive]) -> 
 def check_collision_shape(a: PlacedPrimitive, b: PlacedPrimitive) -> bool:
     # This is just some code to get you started, but you don't have to follow it exactly
 
-    if isinstance(a, Circle) and isinstance(b, Circle):
+    if isinstance(a.primitive, Circle) and isinstance(b.primitive, Circle):
         return collision_check_circle_circle(a, b)
 
-    elif isinstance(a, Circle) and isinstance(b, Rectangle):
+    elif isinstance(a.primitive, Circle) and isinstance(b.primitive, Rectangle):
         return collision_check_rect_circle(b, a)
-
-    elif isinstance(a, Rectangle) and isinstance(b, Circle):
+    
+    elif isinstance(a.primitive, Rectangle) and isinstance(b.primitive, Circle):
         return collision_check_rect_circle(a, b)
-
-    elif isinstance(a, Rectangle) and isinstance(b, Rectangle):
+    
+    elif isinstance(a.primitive, Rectangle) and isinstance(b.primitive, Rectangle):
         return collision_check_rect_rect(a, b)
+    
     else:
-        raise TypeError("Arguments must be either a Circle or a Rectangle primitive") 
+        raise TypeError(f"Arguments must be either a Circle or a Rectangle primitive - instead got {type(a.primitive)} and {type(b.primitive)}") 
 
 def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> bool:
     return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 < (c1.primitive.radius + c2.primitive.radius)**2
 
 def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
+    theta2 = np.deg2rad(r2.pose.theta_deg)
 
-    theta = np.deg2rad(r2.pose.theta_deg - r1.pose.theta_deg)
+    theta1 = -np.deg2rad(r1.pose.theta_deg)
     
     # Get the second rectangle's corners in the first one's frame of reference, centered at (0, 0)
-    corners = np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \ 
-                np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ \
-                    np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]])
+    corners =   np.array([[np.cos(theta1), -np.sin(theta1)], [np.sin(theta1), np.cos(theta1)]]) @ \
+                (np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \
+                np.array([[np.cos(theta2), -np.sin(theta2)], [np.sin(theta2), np.cos(theta2)]]) @ \
+                    np.array([[w2/2, w2/2, -w2/2, -w2/2], [h2/2, -h2/2, h2/2, -h2/2]]))
 
     # Separating line theorem for convex polygons
 
@@ -110,7 +113,7 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
 def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
 
     # The rectangle acts as our reference frame, so transform the circle
-    theta = np.deg2rad(rect.pose.theta_deg)
+    theta = -np.deg2rad(rect.pose.theta_deg)
     new_center = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ \
                     np.array([[circ.pose.x - rect.pose.x], [circ.pose.y - rect.pose.y]])
 
