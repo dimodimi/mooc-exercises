@@ -47,6 +47,8 @@ def check_collision(
 
     # start by rototranslating the robot parts by the robot pose
 
+    #print(f"Initial pose:\t({robot_body[0].pose.x}, {robot_body[0].pose.y}, {robot_body[0].pose.theta_deg})\nQ_pose:\t({robot_pose.x}, {robot_pose.y}, {robot_pose.theta_deg})\nFinal pose:\t({rototranslated_robot[0].pose.x}, {rototranslated_robot[0].pose.y}, {rototranslated_robot[0].pose.theta_deg})")
+
     collided = check_collision_list(rototranslated_robot, Wcoll)
 
     return collided
@@ -81,11 +83,11 @@ def check_collision_shape(a: PlacedPrimitive, b: PlacedPrimitive) -> bool:
         raise TypeError(f"Arguments must be either a Circle or a Rectangle primitive - instead got {type(a.primitive)} and {type(b.primitive)}") 
 
 def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> bool:
-    return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 <= (c1.primitive.radius + c2.primitive.radius)**2
+    return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 < (c1.primitive.radius + c2.primitive.radius)**2
 
 def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
-    theta2 = np.deg2rad(r2.pose.theta_deg)
-    theta1 = np.deg2rad(r1.pose.theta_deg)
+    #theta2 = np.deg2rad(r2.pose.theta_deg)
+    #theta1 = np.deg2rad(r1.pose.theta_deg)
    
     #w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
     #w1, h1 = r1.primitive.xmax - r1.primitive.xmin, r1.primitive.ymax - r1.primitive.ymin
@@ -111,11 +113,11 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     x2_min, x2_max = np.amin(corners_tr[0]), np.amax(corners_tr[0])
     y2_min, y2_max = np.amin(corners_tr[1]), np.amax(corners_tr[1])
 
-    x_overlap = (r1.primitive.xmin <= x2_max) and (r1.primitive.xmax >= x2_min)
-    y_overlap = (r1.primitive.ymin <= y2_max) and (r1.primitive.ymax >= y2_min)
+    x_overlap = (r1.primitive.xmin < x2_max) and (r1.primitive.xmax > x2_min)
+    y_overlap = (r1.primitive.ymin < y2_max) and (r1.primitive.ymax > y2_min)
 
-    if x_overlap and y_overlap:
-        return True
+    if not (x_overlap and y_overlap):
+        return False
 
     # Same procedure with the origin at the second rectangle
     #corners =   np.array([[np.cos(theta2), np.sin(theta2)], [-np.sin(theta2), np.cos(theta2)]]) @ \
@@ -133,13 +135,13 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     x1_min, x1_max = np.amin(corners_tr[0]), np.amax(corners_tr[0])
     y1_min, y1_max = np.amin(corners_tr[1]), np.amax(corners_tr[1])
 
-    x_overlap = (r2.primitive.xmin <= x1_max) and (r2.primitive.xmax >= x1_min)
-    y_overlap = (r2.primitive.ymin <= y1_max) and (r2.primitive.ymax >= y1_min)
+    x_overlap = (r2.primitive.xmin < x1_max) and (r2.primitive.xmax > x1_min)
+    y_overlap = (r2.primitive.ymin < y1_max) and (r2.primitive.ymax > y1_min)
 
-    if x_overlap and y_overlap:
-        return True
+    if not (x_overlap and y_overlap):
+        return False
 
-    return False
+    return True
 
 
 def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
@@ -152,7 +154,7 @@ def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) ->
     new_center = T_matrix(circ.pose, rect.pose) @ np.array([[0.0], [0.0], [1.0]])
 
     return (new_center[0] - np.clip(new_center[0], a_min=rect.primitive.xmin, a_max=rect.primitive.xmax))**2 + \
-            (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 <= circ.primitive.radius**2
+            (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 < circ.primitive.radius**2
 
 
 def RT_pose(Q: FriendlyPose, prev_pose: FriendlyPose) -> FriendlyPose:
