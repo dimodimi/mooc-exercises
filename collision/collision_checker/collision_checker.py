@@ -45,10 +45,6 @@ def check_collision(
                                 type(p.primitive)(*p.primitive.__dict__.values()))
                             for p in robot_body]
 
-    # start by rototranslating the robot parts by the robot pose
-
-    #print(f"Initial pose:\t({robot_body[0].pose.x}, {robot_body[0].pose.y}, {robot_body[0].pose.theta_deg})\nQ_pose:\t({robot_pose.x}, {robot_pose.y}, {robot_pose.theta_deg})\nFinal pose:\t({rototranslated_robot[0].pose.x}, {rototranslated_robot[0].pose.y}, {rototranslated_robot[0].pose.theta_deg})")
-
     collided = check_collision_list(rototranslated_robot, Wcoll)
 
     return collided
@@ -86,26 +82,12 @@ def collision_check_circle_circle(c1: PlacedPrimitive, c2: PlacedPrimitive) -> b
     return (c1.pose.x - c2.pose.x)**2 + (c1.pose.y - c2.pose.y)**2 < (c1.primitive.radius + c2.primitive.radius)**2
 
 def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
-    #theta2 = np.deg2rad(r2.pose.theta_deg)
-    #theta1 = np.deg2rad(r1.pose.theta_deg)
-   
-    #w2, h2 = r2.primitive.xmax - r2.primitive.xmin, r2.primitive.ymax - r2.primitive.ymin
-    #w1, h1 = r1.primitive.xmax - r1.primitive.xmin, r1.primitive.ymax - r1.primitive.ymin
 
-    # Get the second rectangle's corners in the first one's frame of reference, centered at (0, 0)
-    #corners =   np.array([[np.cos(theta1), np.sin(theta1)], [-np.sin(theta1), np.cos(theta1)]]) @ \
-    #corners  = (np.array([[r2.pose.x - r1.pose.x], [r2.pose.y - r1.pose.y]]) + \
-    #            np.array([[np.cos(theta2-theta1), -np.sin(theta2-theta1)], [np.sin(theta2-theta1), np.cos(theta2-theta1)]]) @ \
-    #                np.array([[r2.primitive.xmax, r2.primitive.xmax, r2.primitive.xmin, r2.primitive.xmin],\
-    #                          [r2.primitive.ymax, r2.primitive.ymin, r2.primitive.ymax, r2.primitive.ymin]]))
-    
     corners = np.array([[r2.primitive.xmax, r2.primitive.xmax, r2.primitive.xmin, r2.primitive.xmin],
                         [r2.primitive.ymax, r2.primitive.ymin, r2.primitive.ymax, r2.primitive.ymin],
                         [1.0, 1.0, 1.0, 1.0]], dtype=np.float32)
 
     corners_tr = T_matrix(r2.pose, r1.pose) @ corners
-
-
 
     # Separating line theorem for convex polygons
 
@@ -119,13 +101,7 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
     if not (x_overlap and y_overlap):
         return False
 
-    # Same procedure with the origin at the second rectangle
-    #corners =   np.array([[np.cos(theta2), np.sin(theta2)], [-np.sin(theta2), np.cos(theta2)]]) @ \
-    #corners = (np.array([[r1.pose.x - r2.pose.x], [r1.pose.y - r2.pose.y]]) + \
-    #                np.array([[np.cos(theta1-theta2), -np.sin(theta1-theta2)], [np.sin(theta1-theta2), np.cos(theta1-theta2)]]) @ \
-    #                    np.array([[r1.primitive.xmax, r1.primitive.xmax, r1.primitive.xmin, r1.primitive.xmin],\
-    #                              [r1.primitive.ymax, r1.primitive.ymin, r1.primitive.ymax, r1.primitive.ymin]]))
-
+    # Apply the same for the other rectangle
     corners = np.array([[r1.primitive.xmax, r1.primitive.xmax, r1.primitive.xmin, r1.primitive.xmin],
                         [r1.primitive.ymax, r1.primitive.ymin, r1.primitive.ymax, r1.primitive.ymin],
                         [1.0, 1.0, 1.0, 1.0]], dtype=np.float32)
@@ -147,26 +123,20 @@ def collision_check_rect_rect(r1: PlacedPrimitive, r2: PlacedPrimitive) -> bool:
 def collision_check_rect_circle(rect: PlacedPrimitive, circ: PlacedPrimitive) -> bool:
 
     # The rectangle acts as our reference frame, so transform the circle
-    #theta = -np.deg2rad(rect.pose.theta_deg)
-    #new_center = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) @ \
-    #                np.array([[circ.pose.x - rect.pose.x], [circ.pose.y - rect.pose.y]])
-
     new_center = T_matrix(circ.pose, rect.pose) @ np.array([[0.0], [0.0], [1.0]])
 
-    return (new_center[0] - np.clip(new_center[0], a_min=rect.primitive.xmin, a_max=rect.primitive.xmax))**2 + \
-            (new_center[1] - np.clip(new_center[1], a_min=rect.primitive.ymin, a_max=rect.primitive.ymax))**2 < circ.primitive.radius**2
+    t = new_center - np.clip(new_center,
+                             a_min=np.array([[rect.primitive.xmin], [rect.primitive.ymin], [1.0]]),
+                             a_max=np.array([[rect.primitive.xmax], [rect.primitive.ymax], [1.0]]))
 
+    return (t[0, 0]**2 + t[1, 0]**2) < circ.primitive.radius**2
 
 def RT_pose(Q: FriendlyPose, prev_pose: FriendlyPose) -> FriendlyPose:
 
-    A = FriendlyPose(prev_pose.x, prev_pose.y, prev_pose.theta_deg)
     W = FriendlyPose(0.0, 0.0, 0.0)
-    T = T_matrix(A, W)
-
-    final_pose = T @ np.array([[Q.x], [Q.y], [1.0]])
+    final_pose = T_matrix(prev_pose, W) @ np.array([[Q.x], [Q.y], [1.0]])
 
     return FriendlyPose(final_pose[0, 0], final_pose[1, 0], prev_pose.theta_deg + Q.theta_deg)
-
 
 def R_matrix(theta_deg: float, inverse: bool = False) -> np.ndarray:
     
@@ -200,4 +170,3 @@ def T_matrix(A: FriendlyPose, B: FriendlyPose, inverse: bool = False) -> np.ndar
 
     return T
 
- 
