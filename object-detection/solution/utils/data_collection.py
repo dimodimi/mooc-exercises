@@ -105,7 +105,7 @@ while True:
     if nb_of_steps >= MAX_STEPS:
         break
 
-all_image_names = list(range(npz_index))
+all_image_names = [str(idx) for idx in range(npz_index)]
 train_test_split(all_image_names, SPLIT_PERCENTAGE, DATASET_DIR)
 
 #run(f"rm -rf {DATASET_DIR}/images {DATASET_DIR}/labels")
